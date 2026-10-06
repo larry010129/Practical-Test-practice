@@ -1,5 +1,7 @@
 const wrapper = document.getElementById('wrapper');
 
+let editing = [];
+
 const products = [
     { name: "Apple", category: "fruit", price: 1.5, emoji: "🍎" },
     { name: "Banana", category: "fruit", price: 0.75, emoji: "🍌" },
@@ -20,26 +22,63 @@ function renderProducts(list){
 
 function renderProduct(prd){
     const ele = document.createElement("div");
-    ele.innerHTML = prd.emoji + " " + prd.name + " Price: ";
 
-    const price = document.createElement("input");
-    price.type = "number";
-    price.step = "0.01";
-    price.value = prd.price;
-    price.addEventListener("input", function () {
-        prd.price = Number(price.value);
-    });
+    if (editing.indexOf(prd) !== -1) {
+        ele.innerHTML = prd.emoji + " " + prd.name + " Price: ";
+
+        const price = document.createElement("input");
+        price.type = "number";
+        price.step = "0.01";
+        price.value = prd.price;
+        ele.appendChild(price);
+    } else {
+        ele.innerHTML = prd.emoji + " " + prd.name + " Price: " + prd.price;
+    }
+
+    const edit = document.createElement("button");
+
+    if (editing.indexOf(prd) !== -1) {
+        edit.innerHTML = "Submit";
+        edit.addEventListener("click", function () {
+            prd.price = Number(ele.querySelector("input").value);
+            editing.splice(editing.indexOf(prd), 1);
+            savePrices();
+            renderProducts(products);
+        });
+    } else {
+        edit.innerHTML = "Edit";
+        edit.addEventListener("click", function () {
+            savePrices();
+            editing.push(prd);
+            renderProducts(products);
+        });
+    }
 
     const remove = document.createElement("button");
     remove.innerHTML = "Delete";
     remove.addEventListener("click", function () {
         products.splice(products.indexOf(prd), 1);
+        if (editing.indexOf(prd) !== -1) {
+            editing.splice(editing.indexOf(prd), 1);
+        }
         renderProducts(products);
     });
 
-    ele.appendChild(price);
+    ele.appendChild(edit);
     ele.appendChild(remove);
     return ele;
+}
+
+function savePrices() {
+    const prices = wrapper.querySelectorAll("input");
+    let inputIndex = 0;
+
+    products.forEach(function (prd) {
+        if (editing.indexOf(prd) !== -1) {
+            prd.price = Number(prices[inputIndex].value);
+            inputIndex = inputIndex + 1;
+        }
+    });
 }
 
 renderProducts(products);
